@@ -1,30 +1,39 @@
 import streamlit as st
 import google.generativeai as genai
 
-st.title("Gemini 1.5 Flash AI App")
+st.set_page_config(page_title="AI Chatbot")
+st.title("Gemini 1.5 Flash")
 
-# 1. API Key Setup
+# API Key check
 if "GOOGLE_API_KEY" in st.secrets:
     api_key = st.secrets["GOOGLE_API_KEY"]
     genai.configure(api_key=api_key)
-    
-    # 2. Model Initialization
+
     try:
-        # 'models/' lagane se 404 error nahi aayega
-        model = genai.GenerativeModel('models/gemini-1.5-flash')
+        # Solution: Sirf 'gemini-1.5-flash' use karein, 'models/' prefix ke bina 
+        # Ya phir 'gemini-pro' try karein agar ye fail ho
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
-        user_input = st.text_input("Mujhse kuch puchiye:", placeholder="Type here...")
-        
-        if st.button("Puchiye"):
+        user_input = st.text_input("Sawaal puchiye:")
+
+        if st.button("Submit"):
             if user_input:
+                # generate_content default v1 version use karta hai
                 response = model.generate_content(user_input)
-                st.success(response.text)
+                st.write(response.text)
             else:
-                st.warning("Pehle kuch sawaal toh likhiye!")
-                
-    except Exception as error_message:
-        # Yahan humne 'e' ki jagah 'error_message' use kiya hai taaki confusion na ho
-        st.error(f"Google API Error: {error_message}")
+                st.warning("Kuch likhiye...")
+
+    except Exception as e:
+        # Agar abhi bhi error aaye, toh ye dusra model try karega
+        st.error(f"Pehla error: {e}")
+        st.info("Alternative model 'gemini-pro' try kar raha hoon...")
+        
+        try:
+            model_alt = genai.GenerativeModel('gemini-pro')
+            res = model_alt.generate_content("Hello")
+            st.success("Gemini-Pro kaam kar raha hai!")
+        except Exception as e2:
+            st.error(f"Dono models fail ho gaye: {e2}")
 else:
-    st.error("Secrets mein GOOGLE_API_KEY nahi mili. Please Streamlit Dashboard check karein.")
-            
+    st.error("Secrets mein GOOGLE_API_KEY nahi mili!")
