@@ -1,30 +1,38 @@
 import streamlit as st
 import google.generativeai as genai
-from google.generativeai.types import RequestOptions
+import os
 
-st.title("Gemini 1.5 Flash (Fixed Version)")
+st.title("Gemini 1.5 Flash AI (Stable)")
 
+# API Key check
 if "GOOGLE_API_KEY" in st.secrets:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    api_key = st.secrets["GOOGLE_API_KEY"]
+    
+    # Forceful Configuration
+    genai.configure(api_key=api_key)
     
     try:
-        # v1 version ko force karna taaki 404 na aaye
+        # Model initialization - yahan 'models/' prefix hata kar simple rakha hai
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        user_input = st.text_input("Sawaal puchiye:")
+        user_input = st.text_input("Sawaal puchiye:", key="input")
         
-        if st.button("Submit"):
+        if st.button("Generate Response"):
             if user_input:
-                # Yahan hum 'v1' api version specify kar rahe hain
-                response = model.generate_content(
-                    user_input,
-                    request_options=RequestOptions(api_version='v1')
-                )
-                st.success(response.text)
+                # Direct call without extra options to avoid NameErrors
+                response = model.generate_content(user_input)
+                
+                if response.text:
+                    st.success("AI ka Jawab:")
+                    st.write(response.text)
+                else:
+                    st.warning("AI ne koi jawab nahi diya. Dubara try karein.")
             else:
-                st.warning("Kuch toh likhiye!")
+                st.warning("Kuch likhiye!")
                 
     except Exception as e:
-        st.error(f"Abhi bhi issue hai: {e}")
+        # Pura error dikhane ke liye
+        st.error(f"Error Detail: {e}")
+        st.info("Tip: Agar 404 aa raha hai, toh requirements.txt ko update karke Reboot karein.")
 else:
-    st.error("API Key missing in Secrets!")
+    st.error("Secrets mein API Key nahi mili!")
